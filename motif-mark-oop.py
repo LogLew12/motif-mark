@@ -80,13 +80,13 @@ class Sequence:
             self.motif_loc[motif] = pos_list
 
 
-motif_list = []
+Motif_list = []
 with open(args.motifs) as fh_m:
     for line in fh_m:
         line = line.strip()
-        motif_list.append(Motif(line.upper(), [0.5, 0.5, 0.5]))
+        Motif_list.append(Motif(line.upper(), [0.5, 0.5, 0.5]))
 
-for obj in motif_list:
+for obj in Motif_list:
     obj.create_regex()
 
 Sequence_list = []
@@ -103,9 +103,43 @@ with open(args.file) as fh:
             seq_storage = ""
         else:
             seq_storage = seq_storage + line
+    Sequence_list.append(Sequence(seq_storage, header))
 
+lengths = []
 for seq in Sequence_list:
     seq.split_ex_in()
-    seq.find_motifs(motif_list)
+    seq.find_motifs(Motif_list)
+    lengths.append(len(seq.whole))
 
-print(Sequence_list[1].motif_loc)
+# drawing
+# Creating the cairo surface
+HEIGHT = 300 * len(Sequence_list)
+WIDTH = max(lengths) + 100
+surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
+ctx = cairo.Context(surface)
+
+# Setting a background color
+ctx.save()
+ctx.set_source_rgb(1.0, 1.0, 1.0)
+ctx.paint()
+ctx.restore()
+
+
+for i, seq in enumerate(Sequence_list):
+    # drawing line
+    line_col = "black"
+    h = 150 + (300 * i)
+    ctx.set_line_width(5)
+    ctx.move_to(50, h)
+    ctx.line_to(len(seq.whole) + 50, h)
+    ctx.stroke()
+
+    # drawing rectangle
+    ctx.rectangle(
+        50 + len(seq.intron[0]), h - 30, len(seq.exon[0]), 60
+    )  # Rectangle(x0, y0, x1, y1)
+    ctx.fill()
+
+
+# saving png
+surface.write_to_png("test1.png")
