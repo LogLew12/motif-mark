@@ -174,4 +174,5 @@ for i, motif in enumerate(Motif_list):
 
 
 # saving png
-surface.write_to_png("test1.png")
+filename = args.file.split(".fa")[0]
+surface.write_to_png(f"{filename}.png")
