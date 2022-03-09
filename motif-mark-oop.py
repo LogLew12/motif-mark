@@ -81,10 +81,22 @@ class Sequence:
 
 
 Motif_list = []
+color_list = [
+    [0.8, 0.0, 0.1],
+    [0.0, 0.1, 0.8],
+    [0.0, 0.7, 0.1],
+    [0.8, 0.7, 0.0],
+    [0.7, 0.1, 0.7],
+    [0.6, 0.4, 0.4],
+    [0.4, 0.4, 0.6],
+    [0.4, 0.6, 0.4],
+    [0.5, 0.4, 0.0],
+    [0.0, 0.4, 0.5],
+]
 with open(args.motifs) as fh_m:
-    for line in fh_m:
+    for i, line in enumerate(fh_m):
         line = line.strip()
-        Motif_list.append(Motif(line.upper(), [0.5, 0.5, 0.5]))
+        Motif_list.append(Motif(line.upper(), color_list[i]))
 
 for obj in Motif_list:
     obj.create_regex()
@@ -113,7 +125,7 @@ for seq in Sequence_list:
 
 # drawing
 # Creating the cairo surface
-HEIGHT = 300 * len(Sequence_list)
+HEIGHT = 200 * len(Sequence_list)
 WIDTH = max(lengths) + 100
 surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 ctx = cairo.Context(surface)
@@ -124,11 +136,12 @@ ctx.set_source_rgb(1.0, 1.0, 1.0)
 ctx.paint()
 ctx.restore()
 
-
+# for every sequence in the fasta
 for i, seq in enumerate(Sequence_list):
     # drawing line
     line_col = "black"
-    h = 150 + (300 * i)
+    ctx.set_source_rgba(0, 0, 0, 1.0)
+    h = 100 + (200 * i)
     ctx.set_line_width(5)
     ctx.move_to(50, h)
     ctx.line_to(len(seq.whole) + 50, h)
@@ -139,6 +152,25 @@ for i, seq in enumerate(Sequence_list):
         50 + len(seq.intron[0]), h - 30, len(seq.exon[0]), 60
     )  # Rectangle(x0, y0, x1, y1)
     ctx.fill()
+
+    # making headers
+    ctx.set_font_size(20)
+    ctx.move_to(10, (25 + i * 200))
+    ctx.show_text(seq.header)
+
+    # drawing motif boxes
+    for motif in seq.motif_loc:
+        for loc in seq.motif_loc[motif]:
+            ctx.rectangle(50 + loc[0], h - 30, len(motif.whole), 60)
+            ctx.set_source_rgba(motif.color[0], motif.color[1], motif.color[2], 0.80)
+            ctx.fill()
+
+# making legend
+for i, motif in enumerate(Motif_list):
+    ctx.set_source_rgba(motif.color[0], motif.color[1], motif.color[2], 1.0)
+    ctx.set_font_size(15)
+    ctx.move_to(50 + (i * 80), HEIGHT - 30)
+    ctx.show_text(motif.whole)
 
 
 # saving png
